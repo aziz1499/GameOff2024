@@ -24,7 +24,7 @@ public class PatrolNode
         this.point = point;
     }
 
-    /// <summary>
+    
     /// Choisit aléatoirement un des nœuds suivants.
     /// </summary>
     public PatrolNode GetNextNode()
