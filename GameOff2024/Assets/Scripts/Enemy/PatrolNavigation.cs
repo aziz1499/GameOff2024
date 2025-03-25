@@ -33,6 +33,8 @@ public class PatrolNavigation : MonoBehaviour
     private Camera playerCamera;
     private float startRot;
     private float startTime;
+    private PlayerController playerController; // -----> Ajout d’un lien vers le script du joueur(nouvel algorithme)
+    //Permet d’accéder à la variable currentDisguise du joueur.
 
     [Header("Suspicion")]
     public float suspicionMeter = 0;
@@ -75,6 +77,7 @@ public class PatrolNavigation : MonoBehaviour
         playerCamera = Camera.main;
         player = FindObjectOfType<PlayerController>().gameObject;
         defaultSpeed = agent.speed;
+        playerController = player.GetComponent<PlayerController>(); // -----> initialisation Permet d'accéder aux infos du joueur dès le début.(nouvel algorithme)
 
         //de-parent all "PatrolWaypoint" children (parented for organisation of patrols)
         if (agent.transform.Find("PatrolWaypointGroup") != null)
@@ -127,6 +130,7 @@ public class PatrolNavigation : MonoBehaviour
             default:
                 break;
         }
+        UpdateSuspicion(); // ------>Appelle notre algorithme à chaque frame du jeu
     }
 
     void FixedUpdate()
@@ -384,6 +388,22 @@ public class PatrolNavigation : MonoBehaviour
     {
         //Lose Game
         FindObjectOfType<UIScripts>().ShowLevelLoseScreen();
+    }
+    void UpdateSuspicion() 
+        // ----->Ajout nouvel algorithme adapte la vitesse d’augmentation de la suspicion en fonction du déguisement.
+    {
+        if (playerController == null) return;
+
+        if (playerController.currentDisguise == disguiseNeeded)
+        {
+            suspicionMeter += Time.deltaTime * (suspicionRate * 0.2f);
+        }
+        else
+        {
+            suspicionMeter += Time.deltaTime * suspicionRate;
+        }
+
+        suspicionMeter = Mathf.Clamp(suspicionMeter, 0, 100);
     }
 
 }

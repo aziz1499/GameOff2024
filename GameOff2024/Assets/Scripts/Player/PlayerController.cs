@@ -8,6 +8,10 @@ using UnityEngine.Scripting;
 [DefaultExecutionOrder(-1)]
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] public DisguiseGroups currentDisguise = DisguiseGroups.None; //ajout du variable de déguisement currentDisguise
+    //pour l integrer avec Dans PatrolNavigation.cs 
+    //'SerializeField' permet d’afficher la variable dans Unity, même si elle est publique
+
     [Header("Components")]
     [SerializeField] private CharacterController characterController;
     public CinemachineFreeLook mainVCam;

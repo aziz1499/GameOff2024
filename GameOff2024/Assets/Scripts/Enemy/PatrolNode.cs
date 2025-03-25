@@ -1,6 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+
+
+//Ce script définit la classe PatrolNode utilisée pour créer une structure 
+//*   de données en forme d’arbre ou de graphe représentant un système de patrouille.
+
 /// <summary>
 /// Représente un nœud dans un arbre de patrouille.
 /// Chaque nœud contient une position et des chemins vers d'autres nœuds.
@@ -29,6 +34,3 @@ public class PatrolNode
     }
 }
 
-//Ce script définit la classe PatrolNode utilisée pour créer une structure 
- //*   de données en forme d’arbre ou de graphe représentant un système de patrouille.
-    
