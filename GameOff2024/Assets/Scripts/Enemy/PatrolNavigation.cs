@@ -1,5 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;// ---> Ajout — pour List<>
 using Cinemachine;
 using UnityEngine;
 using UnityEngine.AI;
@@ -25,7 +25,7 @@ public class PatrolNavigation : MonoBehaviour
         Spotting,       //5 - currently seeing the player
         Stunned        //6 - unable to move or detect the player
     }
-    
+
     public NavMeshAgent agent;
     [SerializeField] private Animator enemyAnim;
     private EnemyState currentState = EnemyState.Patrolling;
@@ -44,8 +44,12 @@ public class PatrolNavigation : MonoBehaviour
     [SerializeField] private CinemachineVirtualCamera personalVCam;
     public GameObject suspicionIconMinimap;
 
+    //J ai remplace le tableau Transform[] utilise pour stocker les points de patrouille
+    //par une List<Transform>, ce qui me permet deavoir une structure de donnees plus flexible.
+    //Contrairement aux tableaux, les listes peuvent etre modifiees dynamiquement,
+    //ce qui est utile si je souhaite faire evoluer le comportement de l ennemi ou gerer des evenements dans le jeu.
     [Header("Patrol Route")]
-    [SerializeField] private Transform[] patrolPath;
+    [SerializeField] private List<Transform> patrolPath = new List<Transform>(); // ----->Ajout — remplace Transform[]
     [SerializeField] private int patrolPointer = 0;
     private float defaultSpeed;
 
@@ -60,7 +64,7 @@ public class PatrolNavigation : MonoBehaviour
 
     [Header("Disguise")]//success of diguise calculated using prime numbers
     public DisguiseGroups disguiseNeeded = DisguiseGroups.None;//id of disguise needed by player to avoid detection by this when still.  1 - none, 2 - red, 3 - blue, 5 - green, 7 - yellow
-    
+
     [Header("Sound Effects")]
     [SerializeField] private AudioSource suspicionSound;
     [SerializeField] private AudioSource alertSound;
@@ -73,19 +77,22 @@ public class PatrolNavigation : MonoBehaviour
         defaultSpeed = agent.speed;
 
         //de-parent all "PatrolWaypoint" children (parented for organisation of patrols)
-        if(agent.transform.Find("PatrolWaypointGroup") != null)
+        if (agent.transform.Find("PatrolWaypointGroup") != null)
         {
             agent.transform.Find("PatrolWaypointGroup").parent = null;
         }
         //set patrol start path
-        if(patrolPath.Length > 0)
+        if (patrolPath.Count > 0)
         {
-            if((patrolPointer >= patrolPath.Length) || (patrolPointer < 0))//fix patrol pointer errors
+            if ((patrolPointer >= patrolPath.Count) || (patrolPointer < 0))
+            //-------> modifié : .Length par .Count
+            //-------->j’ai également dû remplacer la propriété .Length par .Count,
+            //------->car les listes utilisent .Count pour connaître le nombre d’éléments.  
             {
                 patrolPointer = 0;
             }
             agent.nextPosition = patrolPath[patrolPointer].position;//teleport to first waypoint
-            if(currentState == EnemyState.Patrolling)
+            if (currentState == EnemyState.Patrolling)
             {
                 enemyAnim.SetBool("isWalking", true);
                 MoveToNextWaypoint();//start patrolling
@@ -97,7 +104,7 @@ public class PatrolNavigation : MonoBehaviour
     void Update()
     {
         //act based on current state
-        switch(currentState)
+        switch (currentState)
         {
             case EnemyState.Waiting:
                 DoWaiting();
@@ -116,9 +123,9 @@ public class PatrolNavigation : MonoBehaviour
                 break;
             case EnemyState.Stunned:
                 DoStunned();
-                break;  
+                break;
             default:
-                break; 
+                break;
         }
     }
 
@@ -129,13 +136,13 @@ public class PatrolNavigation : MonoBehaviour
         stunIcon.transform.LookAt(playerCamera.transform);
         //set mask heights (and color)
         suspicionMask.transform.localPosition = new Vector3(0, (Mathf.Min(suspicionMeter, 100) * 0.09f) + 0.5f, 0);
-        suspicionIconRenderer.color = Color.HSVToRGB((60 - (Mathf.Min(suspicionMeter, 100) * 0.6f))/360f, 0.95f, 0.95f);
+        suspicionIconRenderer.color = Color.HSVToRGB((60 - (Mathf.Min(suspicionMeter, 100) * 0.6f)) / 360f, 0.95f, 0.95f);
         stunMask.transform.localPosition = new Vector3(0, (Mathf.Min(stunTimer, stunDuration) * (9f / stunDuration)) + 0.5f, 0);
         //stun time
-        if(isStunned)
+        if (isStunned)
         {
             stunTimer -= Time.fixedDeltaTime;
-            if(stunTimer < 0)
+            if (stunTimer < 0)
             {
                 stunTimer = 0;
             }
@@ -145,7 +152,7 @@ public class PatrolNavigation : MonoBehaviour
     public void NullifyState()//Set state to null, effectively disabling this
     {
         CancelInvoke();
-        if(enemyAnim != null)
+        if (enemyAnim != null)
         {
             enemyAnim.SetBool("isWalking", false);
         }
@@ -170,7 +177,7 @@ public class PatrolNavigation : MonoBehaviour
         agent.SetDestination(patrolPath[patrolPointer].position);//go to next place
         enemyAnim.SetBool("isWalking", true);
         enemyAnim.SetBool("isDizzy", false);
-        patrolPointer = (patrolPointer + 1) % patrolPath.Length;
+        patrolPointer = (patrolPointer + 1) % patrolPath.Count;//----> modifie : .Length → .Count 
         stunIcon.SetActive(false);
         stunIconMinimap.SetActive(false);
         isStunned = false;
@@ -178,7 +185,7 @@ public class PatrolNavigation : MonoBehaviour
 
     private void DoPatroling()//Patrolling State----------------------------------------------------------------------------------------------------
     {
-        if(((!agent.pathPending) && (agent.remainingDistance < 0.5f)) || (agent.pathStatus == NavMeshPathStatus.PathInvalid))//if patrol destination reached or failed
+        if (((!agent.pathPending) && (agent.remainingDistance < 0.5f)) || (agent.pathStatus == NavMeshPathStatus.PathInvalid))//if patrol destination reached or failed
         {
             currentState = EnemyState.Waiting;
         }
@@ -186,7 +193,7 @@ public class PatrolNavigation : MonoBehaviour
 
     private void DoNavigating()//Navigating State----------------------------------------------------------------------------------------------------
     {
-        if(((!agent.pathPending) && (agent.remainingDistance < 0.5f)) || (agent.pathStatus == NavMeshPathStatus.PathInvalid))//if navigation destination reached or failed
+        if (((!agent.pathPending) && (agent.remainingDistance < 0.5f)) || (agent.pathStatus == NavMeshPathStatus.PathInvalid))//if navigation destination reached or failed
         {
             currentState = EnemyState.Finding;
             startRot = agent.transform.eulerAngles.y;//initial rotation for looking around
@@ -239,7 +246,7 @@ public class PatrolNavigation : MonoBehaviour
         //rotate enemy to search
         agent.transform.eulerAngles = new Vector3(agent.transform.eulerAngles.x, startRot + (60 * Mathf.Sin(Time.timeSinceLevelLoad - startTime)), agent.transform.eulerAngles.z);
         //if suspicion gone, continue patrol
-        if(suspicionMeter <= 0)
+        if (suspicionMeter <= 0)
         {
             suspicionMeter = 0;
             suspicionIcon.SetActive(false);
@@ -255,7 +262,7 @@ public class PatrolNavigation : MonoBehaviour
         TurnTowardsPlayer();
         //if too far, move closer
         Vector3 endPos = new Vector3(player.transform.position.x, agent.transform.position.y, player.transform.position.z);
-        if(Vector3.Distance(agent.transform.position, endPos) > 10)
+        if (Vector3.Distance(agent.transform.position, endPos) > 10)
         {
             agent.SetDestination(endPos);
             enemyAnim.SetBool("isWalking", true);
@@ -294,9 +301,9 @@ public class PatrolNavigation : MonoBehaviour
         Vector3 endPos = new Vector3(player.transform.position.x, agent.transform.position.y, player.transform.position.z);
         Vector3 direVect = (endPos - startPos).normalized;
         float speedMultiplier = Vector3.Distance(startPos, endPos) < 5 ? 4 : 2;//increase turn speed if player is very close
-        if(Mathf.Abs(Vector3.SignedAngle(agent.transform.forward, direVect, Vector3.up)) > 7.5f)
+        if (Mathf.Abs(Vector3.SignedAngle(agent.transform.forward, direVect, Vector3.up)) > 7.5f)
         {
-            if(Vector3.SignedAngle(agent.transform.forward, direVect, Vector3.up) > 0)
+            if (Vector3.SignedAngle(agent.transform.forward, direVect, Vector3.up) > 0)
             {
                 agent.transform.Rotate(new Vector3(0, turnSpeed * speedMultiplier, 0));
             }
@@ -343,11 +350,11 @@ public class PatrolNavigation : MonoBehaviour
 
     private void CheckForEndGame()
     {
-        if(suspicionMeter >= 100)
+        if (suspicionMeter >= 100)
         {
             suspicionMeter = 100;
             suspicionSound.Stop();
-            if(gameOverEnemy == null)//stop multiple enemies from running this script at the same time
+            if (gameOverEnemy == null)//stop multiple enemies from running this script at the same time
             {
                 gameOverEnemy = this;
                 enemyAnim.SetBool("isWalking", false);
@@ -360,7 +367,7 @@ public class PatrolNavigation : MonoBehaviour
                 FindObjectOfType<UIScripts>().HUDOut();//turn off hud
                 alertSound.Play();
                 //pan camera to player
-                if(personalVCam != null)
+                if (personalVCam != null)
                 {
                     personalVCam.enabled = true;
                     EndGamePostCameraPan();
@@ -378,5 +385,5 @@ public class PatrolNavigation : MonoBehaviour
         //Lose Game
         FindObjectOfType<UIScripts>().ShowLevelLoseScreen();
     }
-    
+
 }
