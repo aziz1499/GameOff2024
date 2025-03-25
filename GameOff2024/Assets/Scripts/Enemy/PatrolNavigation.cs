@@ -169,7 +169,7 @@ public class PatrolNavigation : MonoBehaviour
         agent.ResetPath();
         CancelInvoke();
         agent.speed = defaultSpeed;
-        Invoke("MoveToNextWaypoint", 0.5f);//return to patrol
+        Invoke("MoveToNextWaypoint", 0.5f);//return to patrol,,
         enemyAnim.SetBool("isWalking", false);
         currentState = EnemyState.NullState;
     }
@@ -390,7 +390,7 @@ public class PatrolNavigation : MonoBehaviour
         FindObjectOfType<UIScripts>().ShowLevelLoseScreen();
     }
     void UpdateSuspicion() 
-        // ----->Ajout nouvel algorithme adapte la vitesse d’augmentation de la suspicion en fonction du déguisement.
+        // ----->Ajout —nouvel algorithme adapte la vitesse d’augmentation de la suspicion en fonction du déguisement.
     {
         if (playerController == null) return;
 
