@@ -1,49 +1,39 @@
+﻿
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerConeDetection : MonoBehaviour
-{    
-    [SerializeField] private GameObject headLightOutline;//used to detect if lights are on
+{
+    [SerializeField] private GameObject headLightOutline; // indique si la lumière est activée
 
-    void OnTriggerEnter(Collider col)//if enemy spotted, enter spotting mode
+    void OnTriggerEnter(Collider col)
     {
-        if(headLightOutline.activeSelf)
-        {
-            if(col.tag == "Enemy")
-            {
-                //if there is direct line of sight
-                RaycastHit hit;
-                if(Physics.Raycast(transform.position, (col.transform.position - transform.position).normalized, out hit, 50))
-                {
-                    if(hit.collider.gameObject.Equals(col.gameObject))
-                    {
-                        if(col.GetComponent<PatrolNavigation>() != null)//if is a patrolling enemy, stun them
-                        {
-                            col.GetComponent<PatrolNavigation>().BecomeStunned();
-                        }
-                    }
-                }
-            }
-        }
+        HandleEnemyDetection(col);
     }
 
-    void OnTriggerStay(Collider col)//if enemy spotted, enter spotting mode
+    void OnTriggerStay(Collider col)
     {
-        if(headLightOutline.activeSelf)
+        HandleEnemyDetection(col);
+    }
+
+    
+    private void HandleEnemyDetection(Collider col) // ---->Nouvelle méthode pour éviter duplication de code
+    {
+        if (!headLightOutline.activeSelf) return;
+
+        if (col.CompareTag("Enemy"))
         {
-            if(col.tag == "Enemy")
+            Vector3 direction = (col.transform.position - transform.position).normalized; //--> Utilisation du vecteur
+            if (Physics.Raycast(transform.position, direction, out RaycastHit hit, 50))
             {
-                //if there is direct line of sight
-                RaycastHit hit;
-                if(Physics.Raycast(transform.position, (col.transform.position - transform.position).normalized, out hit, 50))
+                if (hit.collider.gameObject == col.gameObject)
                 {
-                    if(hit.collider.gameObject.Equals(col.gameObject))
+                    PatrolNavigation patrol = col.GetComponent<PatrolNavigation>();
+                    if (patrol != null)
                     {
-                        if(col.GetComponent<PatrolNavigation>() != null)//if is a patrolling enemy, stun them
-                        {
-                            col.GetComponent<PatrolNavigation>().BecomeStunned();
-                        }
+                        patrol.BecomeStunned();
                     }
                 }
             }
